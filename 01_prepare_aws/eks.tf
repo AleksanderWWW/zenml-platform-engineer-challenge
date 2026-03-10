@@ -15,7 +15,6 @@ module "eks" {
     aws-ebs-csi-driver = { service_account_role_arn = module.ebs_csi_irsa.arn }
   }
 
-  # Those are set for demo purposes - adjust as needed
   enable_cluster_creator_admin_permissions = true
   endpoint_public_access                   = true
 
@@ -48,6 +47,6 @@ resource "null_resource" "update_kubeconfig" {
   count      = var.should_update_kubeconfig ? 1 : 0
 
   provisioner "local-exec" {
-    command = "aws eks update-kubeconfig --region ${var.region} --name ${module.eks.cluster_name}"
+    command = "aws eks update-kubeconfig --region ${var.aws_region} --name ${module.eks.cluster_name}"
   }
 }

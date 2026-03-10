@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "artifact_store" {
-  bucket = "my-app-artifacts-${data.aws_caller_identity.current.account_id}" # Ensures uniqueness
+  bucket = "my-app-artifacts-1234509876"
 
   tags = {
     Name        = "Artifact Store"

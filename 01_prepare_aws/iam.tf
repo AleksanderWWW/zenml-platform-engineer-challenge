@@ -24,12 +24,12 @@ resource "aws_iam_policy" "zenml_platform_policy" {
       {
         Action   = ["s3:ListBucket", "s3:GetBucketLocation"]
         Effect   = "Allow"
-        Resource = [var.artifact_bucket_arn]
+        Resource = [aws_s3_bucket.artifact_store.arn]
       },
       {
         Action   = ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"]
         Effect   = "Allow"
-        Resource = ["${var.artifact_bucket_arn}/*"]
+        Resource = ["${aws_s3_bucket.artifact_store.arn}/*"]
       },
       # ECR Permissions (Required for image building/storing)
       {
@@ -56,9 +56,9 @@ resource "aws_iam_policy" "zenml_platform_policy" {
 
 module "zenml_irsa_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
-  version = "~> 5.0"
+  version = "~> 6.0"
 
-  role_name = "${var.project_name}-server-role"
+  name = "${var.project_name}-server-role"
 
   oidc_providers = {
     main = {
@@ -67,7 +67,7 @@ module "zenml_irsa_role" {
     }
   }
 
-  role_policy_arns = {
-    platform_access = aws_iam_policy.zenml_platform_policy.arn
+  policies = {
+    policy = aws_iam_policy.zenml_platform_policy.arn
   }
 }
