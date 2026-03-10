@@ -79,30 +79,17 @@ terraform {
       version = "~> 5.0"
     }
 
-    # Uncomment if using EKS with Helm
-    # kubernetes = {
-    #   source  = "hashicorp/kubernetes"
-    #   version = "~> 2.0"
-    # }
-    # helm = {
-    #   source  = "hashicorp/helm"
-    #   version = "~> 2.0"
-    # }
-
-    # For stretch goal: AWS Stack provisioning
-    # zenml = {
-    #   source = "zenml-io/zenml"
-    # }
-  }
-
-  # Stretch Goal D: Remote state
-  # backend "s3" {
-  #   bucket         = "your-terraform-state-bucket"
-  #   key            = "zenml/terraform.tfstate"
-  #   region         = "us-east-1"
-  #   dynamodb_table = "terraform-locks"
-  #   encrypt        = true
-  # }
+    backend "s3" {
+      bucket         = ""
+      key            = "production/terraform.tfstate"
+      region         = var.region
+      encrypt        = true
+      
+      # This enables native S3 locking without DynamoDB
+      use_lockfile   = true 
+      
+      consistency    = "strong" 
+    }
 }
 
 provider "aws" {
