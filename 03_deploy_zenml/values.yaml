@@ -1,0 +1,22 @@
+# Values for the zenml helm chart
+
+serviceAccount:
+  create: true
+  name: "zenml"
+  annotations:
+    eks.amazonaws.com/role-arn: "${zenml_role_arn}"
+  
+database:
+  external:
+    type: mysql
+    # This points to the MySQL service in the 'mysql' namespace
+    host: zenml-db.mysql.svc.cluster.local 
+    port: 3306
+    database: zenml
+    # We provide the username directly, but the password via the secret
+    username: "admin_user" 
+
+  # This is the "bridge" to your Terraform secret
+  passwordSecretRef:
+    name: "zenml-db-secret"
+    key: "password"

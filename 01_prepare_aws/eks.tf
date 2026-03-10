@@ -11,17 +11,14 @@ module "eks" {
     vpc-cni                = { before_compute = true }
     eks-pod-identity-agent = { before_compute = true }
 
-    # !! these are crucial for seamless access to EFS and EBS from the cluster !!
+    # !! this is crucial for seamless access to EBS from the cluster !!
     aws-ebs-csi-driver = { service_account_role_arn = module.ebs_csi_irsa.arn }
-    aws-efs-csi-driver = { service_account_role_arn = module.efs_csi_irsa.arn }
   }
 
   # Those are set for demo purposes - adjust as needed
   enable_cluster_creator_admin_permissions = true
   endpoint_public_access                   = true
 
-  # We disable EKS Auto Mode for demo purposes
-  # Adjust as needed
   compute_config = {
     enabled = false
   }
@@ -43,15 +40,6 @@ module "eks" {
       min_size       = 5
       max_size       = 5
     },
-
-    # a larger instance for the purposes of running simulation workloads
-    simulation = {
-      instance_types = ["r6i.2xlarge"]
-      ami_type       = "BOTTLEROCKET_x86_64"
-      desired_size   = 1
-      min_size       = 1
-      max_size       = 1
-    }
   }
 }
 

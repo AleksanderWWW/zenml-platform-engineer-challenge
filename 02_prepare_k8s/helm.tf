@@ -39,8 +39,6 @@ resource "helm_release" "envoy_gateway" {
   namespace        = "envoy-gateway-system"
   create_namespace = true
 
-  # Since this is a critical system component, 
-  # wait for all pods to be ready before finishing the apply
   wait = true
 }
 
@@ -53,7 +51,6 @@ resource "helm_release" "cert_manager" {
   namespace        = "cert-manager"
   create_namespace = true
 
-  # This replaces --set crds.enabled=true
   set = [
     {
       name  = "crds.enabled"
@@ -66,4 +63,58 @@ resource "helm_release" "cert_manager" {
   ]
 
   wait = true
+}
+
+resource "helm_release" "mysql" {
+  name       = "zenml-db"
+  repository = "https://charts.bitnami.com/bitnami"
+  chart      = "mysql"
+  version    = "11.1.23"
+  namespace  = "mysql"
+  create_namespace = true
+
+  wait = true
+
+  set = [
+  {
+    name  = "auth.database"
+    value = "zenml"
+  }
+
+  {
+    name  = "auth.username"
+    value = var.db_username
+  }
+  {
+    name  = "auth.password"
+    value = var.db_password
+  }
+
+  # Storage Configuration (EBS)
+  {
+    name  = "primary.persistence.enabled"
+    value = "true"
+  }
+
+  {
+    name  = "primary.persistence.size"
+    value = "10Gi"
+  }
+
+  {
+    name  = "primary.persistence.storageClass"
+    value = kubernetes_storage_class.ebs_sc.name
+  }
+
+  # Resources & Best Practices
+  {
+    name  = "primary.resources.requests.cpu"
+    value = "250m"
+  }
+
+  {
+    name  = "primary.resources.limits.memory"
+    value = "512Mi"
+  }
+  ]
 }

@@ -21,4 +21,14 @@ module "vpc" {
 
   enable_nat_gateway = true
   single_nat_gateway = true
+
+  public_subnet_tags = {
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    "kubernetes.io/role/elb"                    = "1" # Tells AWS to use these for Public LoadBalancers
+  }
+
+  private_subnet_tags = {
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    "kubernetes.io/role/internal-elb"           = "1" # Tells AWS to use these for Internal LoadBalancers
+  }
 }
