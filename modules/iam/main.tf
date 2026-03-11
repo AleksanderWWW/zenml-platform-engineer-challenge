@@ -1,0 +1,90 @@
+variable "env" {
+    type = string
+    description = "environment of the deployment"
+}
+
+module "ebs_csi_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "~> 6.0"
+
+  name                  = "ebs-csi-${var.env}"
+  attach_ebs_csi_policy = true
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
+    }
+  }
+}
+
+resource "aws_iam_policy" "zenml_platform_policy" {
+  name        = "${var.env}-platform-policy"
+  description = "Allows ZenML to manage S3 artifacts and ECR images"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      # S3 Permissions
+      {
+        Action   = ["s3:ListBucket", "s3:GetBucketLocation"]
+        Effect   = "Allow"
+        Resource = [aws_s3_bucket.artifact_store.arn]
+      },
+      {
+        Action   = ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"]
+        Effect   = "Allow"
+        Resource = ["${aws_s3_bucket.artifact_store.arn}/*"]
+      },
+      # ECR Permissions (Required for image building/storing)
+      {
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:GetRepositoryPolicy",
+          "ecr:DescribeRepositories",
+          "ecr:ListImages",
+          "ecr:DescribeImages",
+          "ecr:BatchGetImage",
+          "ecr:InitiateLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:CompleteLayerUpload",
+          "ecr:PutImage"
+        ]
+        Effect   = "Allow"
+        Resource = "*" # ECR GetAuthorizationToken requires "*"
+      }
+    ]
+  })
+}
+
+module "zenml_irsa_role" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "~> 6.0"
+
+  name = "${var.env}-server-role"
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["zenml:zenml"]
+    }
+  }
+
+  policies = {
+    policy = aws_iam_policy.zenml_platform_policy.arn
+  }
+}
+
+output "zenml_role_arn" {
+    type = string
+    description = "ARN of the role to attach to the K8s service account"
+    value = module.zenml_irsa_role.arn
+}
+
+output "ebs_role_arn" {
+    type = string
+    description = "ARN of the role that allows to attach EBS to EKS cluster"
+    value = module.ebs_csi_irsa.arn
+}
