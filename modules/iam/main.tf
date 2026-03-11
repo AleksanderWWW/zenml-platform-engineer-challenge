@@ -1,8 +1,3 @@
-variable "env" {
-    type = string
-    description = "environment of the deployment"
-}
-
 module "ebs_csi_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
   version = "~> 6.0"
@@ -75,16 +70,4 @@ module "zenml_irsa_role" {
   policies = {
     policy = aws_iam_policy.zenml_platform_policy.arn
   }
-}
-
-output "zenml_role_arn" {
-    type = string
-    description = "ARN of the role to attach to the K8s service account"
-    value = module.zenml_irsa_role.arn
-}
-
-output "ebs_role_arn" {
-    type = string
-    description = "ARN of the role that allows to attach EBS to EKS cluster"
-    value = module.ebs_csi_irsa.arn
 }

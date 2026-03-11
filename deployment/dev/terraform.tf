@@ -1,10 +1,13 @@
 terraform {
   required_version = ">= 1.0"
- # TODO helm, k8s provuders, not aws
   required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 6.0"
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 3.0"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 3.0"
     }
   }
 
@@ -19,14 +22,12 @@ terraform {
     }
 }
 
-provider "aws" {
-  region = "us-east-1"
+provider "kubernetes" {
+  config_path    = "~/.kube/config"
+}
 
-  default_tags {
-    tags = {
-      Project     = "zenml-platform-challenge"
-      Environment = locals.env
-      ManagedBy   = "terraform"
-    }
+provider "helm" {
+  kubernetes {
+    config_path = "~/.kube/config"
   }
 }

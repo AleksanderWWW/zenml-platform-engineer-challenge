@@ -1,8 +1,3 @@
-variable "env" {
-    type = string
-    description = "environment of the deployment"
-}
-
 resource "aws_ecr_repository" "zenml_repo" {
   name                 = "zenml-${var.env}-repository"
   image_tag_mutability = "MUTABLE"
