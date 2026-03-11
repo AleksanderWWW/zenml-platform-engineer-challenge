@@ -124,10 +124,14 @@ variable "db_password" {
   sensitive   = true
 }
 
+variable "db_secret_name" {
+  type = string
+}
+
 # 2. Provision the Kubernetes Secret
 resource "kubernetes_secret" "app_db_creds" {
   metadata {
-    name      = "database-credentials"
+    name      = var.db_secret_name
     namespace = kubernetes_namespace_v1.zenml_namespace.metadata[0].name
     
     labels = {

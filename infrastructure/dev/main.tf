@@ -1,5 +1,5 @@
 locals {
-  eks_name = "zenml-eks-dev"
+  eks_name = "zenml-eks"
   k8s_version = "1.34"
   env = "dev"
 }
@@ -16,7 +16,7 @@ module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "6.5.0"
 
-  name = "optima-eks"
+  name = "zenml-vpc-${locals.env}"
   cidr = "10.1.0.0/16"
 
   azs             = slice(data.aws_availability_zones.available.names, 0, 3)
@@ -27,12 +27,12 @@ module "vpc" {
   single_nat_gateway = true
 
   public_subnet_tags = {
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    "kubernetes.io/cluster/${locals.eks_name}-${locals.env}" = "shared"
     "kubernetes.io/role/elb"                    = "1" # Tells AWS to use these for Public LoadBalancers
   }
 
   private_subnet_tags = {
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    "kubernetes.io/cluster/${locals.eks_name}-${locals.env}" = "shared"
     "kubernetes.io/role/internal-elb"           = "1" # Tells AWS to use these for Internal LoadBalancers
   }
 }
@@ -42,7 +42,7 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 21.0"
 
-  name               = locals.eks_name
+  name               = "${locals.eks_name}-${locals.env}"
   kubernetes_version = locals.kubernetes_version
 
   addons = {
@@ -69,8 +69,6 @@ module "eks" {
   # Node group definition
   # ---------------------------
   eks_managed_node_groups = {
-
-    # medium instances to handle the UI, simulation scheduler, db server, monitoring stack etc.
     default = {
       instance_types = ["t3.medium"]
       ami_type       = "BOTTLEROCKET_x86_64"
